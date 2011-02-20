@@ -10,7 +10,7 @@
 			var timeSeries = new TimeSeries();
 
 			var smoothieChart = new SmoothieChart({ grid: { strokeStyle: 'rgb(125, 0, 0)', fillStyle: 'rgb(60, 0, 0)', lineWidth: 1, millisPerLine: 1000, verticalSections: 2 } });
-			smoothieChart.addTimeSeries(timeSeries);
+			smoothieChart.addTimeSeries(timeSeries, { strokeStyle:'rgb(0, 255, 0)', fillStyle:'rgba(0, 255, 0, 0.4)', lineWidth:3 });
 			smoothieChart.streamTo(document.getElementById("mycanvas"));
 
 
@@ -34,7 +34,7 @@
 
 <body>
 	<div id="log"></div>
-	<canvas id="mycanvas" width="400" height="200"></canvas>
+	<canvas id="mycanvas" width="400" height="180"></canvas>
 </body>
 
 </html>
