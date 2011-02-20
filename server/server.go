@@ -4,68 +4,42 @@ import (
 	"http"
 	"log"
 	"websocket"
-	"fmt"
+	"time"
+	"math"
+	"strconv"
 )
 
-var messageChan = make(chan []byte)
-var subscriptionChan = make(chan subscription)
-
-type subscription struct {
-	conn      *websocket.Conn
-	subscribe bool
-}
-
 func main() {
-	go hub()
+	log.Println("Starting Server...")
 
-	http.HandleFunc("/ws", webSocketProtocolSwitch)
+	http.Handle("/ws", websocket.Handler(handler));
 
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatal("ListenAndServe:", err)
+	err := http.ListenAndServe(":8080", nil);
+
+	if err != nil {
+		panic("ListenAndServe: " + err.String())
 	}
 }
 
-func hub() {
-	conns := make(map[*websocket.Conn]int)
-	for {
-		select {
-			case subscription := <-subscriptionChan:
-				fmt.Printf("subscription: %v", subscription)
-				conns[subscription.conn] = 0, subscription.subscribe
-			case message := <-messageChan:
-				fmt.Printf("message: %v", message)
-				for conn, _ := range conns {
-					if _, err := conn.Write(message); err != nil {
-						conn.Close()
-					}
-				}
-		}
-	}
-}
-
-func webSocketProtocolSwitch(c http.ResponseWriter, req *http.Request) {
-	// Handle old and new versions of protocol.
-	if _, found := req.Header["Sec-Websocket-Key1"]; found {
-		websocket.Handler(clientHandler).ServeHTTP(c, req)
-	} else {
-		websocket.Draft75Handler(clientHandler).ServeHTTP(c, req)
-	}
-}
-
-func clientHandler(ws *websocket.Conn) {
+func handler(ws *websocket.Conn) {
 	defer func() {
-		subscriptionChan <- subscription{ws, false}
-		ws.Close()
+		log.Printf("Closing websocket: %v\n", ws)
+        	ws.Close()
 	}()
 
-	subscriptionChan <- subscription{ws, true}
-
-	buf := make([]byte, 256)
+	x := 0.
 	for {
-		n, err := ws.Read(buf)
-		if err != nil {
-			break
+		if x >= 2*math.Pi {
+			x = 0
+		} else {
+			x += 0.05
 		}
-		messageChan <- buf[0:n]
+		
+		time.Sleep(500*1000*1000) // sleep for 500ms (Sleep takes nanoseconds)
+
+		msg := strconv.Ftoa64(math.Sin(x), 'g', 10)
+		log.Printf("%v sending: %v\n", ws, msg)
+		ws.Write( []byte(msg) )
 	}
 }
+
