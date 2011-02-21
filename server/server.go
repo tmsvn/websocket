@@ -22,11 +22,6 @@ func main() {
 }
 
 func handler(ws *websocket.Conn) {
-	defer func() {
-		log.Printf("Closing websocket: %v\n", ws)
-        	ws.Close()
-	}()
-
 	x := 0.
 	for {
 		if x >= 2*math.Pi {
